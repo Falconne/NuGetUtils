@@ -54,8 +54,8 @@ namespace NormaliseNugetPackages
                 }
             }
 
+            var packagesThatNeedUpdating = new Dictionary<string, List<string>>();
             // Identify components using older packages
-            var invalidPackagesFound = false;
             foreach (var packageFile in packageFiles)
             {
                 foreach (var versionedPackage in GetPackagesIn(packageFile))
@@ -63,14 +63,32 @@ namespace NormaliseNugetPackages
                     var id = versionedPackage.Key;
                     var version = versionedPackage.Value;
                     if (version >= packageVersions[id]) continue;
-                    Logger.Error($"In {packageFile}:");
-                    Logger.Error($"\t{id} should be version {packageVersions[id]}");
-                    invalidPackagesFound = true;
+                    Logger.Debug($"In {packageFile}:");
+                    Logger.Debug($"\t{id} should be version {packageVersions[id]}");
+                    if (!packagesThatNeedUpdating.ContainsKey(id))
+                        packagesThatNeedUpdating[id] = new List<string>();
+
+                    packagesThatNeedUpdating[id].Add(Path.GetDirectoryName(packageFile));
                 }
             }
 
-            if (invalidPackagesFound)
-                ExitWithError("One or more conflicting nuget versions found");
+            if (packagesThatNeedUpdating.Count == 0)
+            {
+                Logger.Info("All packages are upto date");
+                return;
+            }
+
+            foreach (var packageThatNeedsUpdating in packagesThatNeedUpdating)
+            {
+                var id = packageThatNeedsUpdating.Key;
+                var version = packageVersions[id];
+                Logger.Error($"These components need {id} updated to {version}");
+                foreach (var packageConfig in packageThatNeedsUpdating.Value)
+                {
+                    Logger.Error($"\t{packageConfig}");
+                }
+            }
+            ExitWithError("One or more conflicting package versions found");
         }
 
         private static IEnumerable<KeyValuePair<string, Version>> GetPackagesIn(string packageFile)
@@ -88,7 +106,7 @@ namespace NormaliseNugetPackages
                 Version version;
                 if (!Version.TryParse(versionRaw, out version))
                 {
-                    Logger.Warn($"Ignoring unparsable version for {id}: {versionRaw}");
+                    Logger.Warn($"Ignoring unparsable version for {id}: {versionRaw} in {packageFile}");
                     continue;
                 }
 

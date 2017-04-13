@@ -8,7 +8,7 @@ using log4net.Config;
 
 namespace NormaliseNugetPackages
 {
-    // Checks all package.config files under given path for conflicting versions
+    // Checks all package.config files under given path for conflicting package versions
     internal class Program
     {
         private static void Main(string[] args)
@@ -20,97 +20,19 @@ namespace NormaliseNugetPackages
                 ExitWithError($"Usage: {AppDomain.CurrentDomain.FriendlyName} <path>");
             }
 
-            var root = args[0];
-            if (!Directory.Exists(root))
+            var repoRoot = args[0];
+
+            try
             {
-                ExitWithError($"{root} does not exist");
-            }
-
-            var packageFiles = Directory.GetFiles(root, "packages.config", SearchOption.AllDirectories);
-
-            var packageVersions = new Dictionary<string, Version>();
-
-            // Find the latest version used for all packages
-            foreach (var packageFile in packageFiles)
-            {
-                foreach (var versionedPackage in GetPackagesIn(packageFile))
+                var packageVersions = PackageConfigValidator.Validate(repoRoot);
+                if (packageVersions == null)
                 {
-                    var id = versionedPackage.Key;
-                    var version = versionedPackage.Value;
-                    if (packageVersions.ContainsKey(id))
-                    {
-                        if (version <= packageVersions[id])
-                        {
-                            continue;
-                        }
-                        Logger.Debug($"UPDATE {id} to {version} ");
-                    }
-                    else
-                    {
-                        Logger.Debug($"Add {id} ({version}) ");
-                    }
-
-                    packageVersions[id] = version;
+                    ExitWithError("One or more conflicting package versions found");
                 }
             }
-
-            var packagesThatNeedUpdating = new Dictionary<string, List<string>>();
-            // Identify components using older packages
-            foreach (var packageFile in packageFiles)
+            catch (ValidationException e)
             {
-                foreach (var versionedPackage in GetPackagesIn(packageFile))
-                {
-                    var id = versionedPackage.Key;
-                    var version = versionedPackage.Value;
-                    if (version >= packageVersions[id]) continue;
-                    Logger.Debug($"In {packageFile}:");
-                    Logger.Debug($"\t{id} should be version {packageVersions[id]}");
-                    if (!packagesThatNeedUpdating.ContainsKey(id))
-                        packagesThatNeedUpdating[id] = new List<string>();
-
-                    packagesThatNeedUpdating[id].Add(Path.GetDirectoryName(packageFile));
-                }
-            }
-
-            if (packagesThatNeedUpdating.Count == 0)
-            {
-                Logger.Info("All packages are upto date");
-                return;
-            }
-
-            foreach (var packageThatNeedsUpdating in packagesThatNeedUpdating)
-            {
-                var id = packageThatNeedsUpdating.Key;
-                var version = packageVersions[id];
-                Logger.Error($"These components need {id} updated to {version}");
-                foreach (var packageConfig in packageThatNeedsUpdating.Value)
-                {
-                    Logger.Error($"\t{packageConfig}");
-                }
-            }
-            ExitWithError("One or more conflicting package versions found");
-        }
-
-        private static IEnumerable<KeyValuePair<string, Version>> GetPackagesIn(string packageFile)
-        {
-            var xelement = XElement.Load(packageFile);
-            var packages = xelement.Descendants("package");
-            foreach (var packageElement in packages)
-            {
-                var id = packageElement.Attribute("id")?.Value;
-                var versionRaw = packageElement.Attribute("version")?.Value;
-                if (id == null || versionRaw == null)
-                {
-                    ExitWithError($"Invalid syntax in {packageFile}");
-                }
-                Version version;
-                if (!Version.TryParse(versionRaw, out version))
-                {
-                    Logger.Warn($"Ignoring unparsable version for {id}: {versionRaw} in {packageFile}");
-                    continue;
-                }
-
-                yield return new KeyValuePair<string, Version>(id, version);
+                ExitWithError(e.Message);
             }
         }
 

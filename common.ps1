@@ -1,8 +1,6 @@
 Set-StrictMode -Version Latest
 $scriptDir = $PSScriptRoot
 
-Import-Module "$scriptDir\Modules\Util"
-
 if (!(Test-Path Env:\BUILD_VERSION))
 {
     Write-Host "WARNING: BUILD_VERSION not set, assuming 1.0.0.1"

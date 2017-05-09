@@ -4,6 +4,8 @@ $scriptDir = $PSScriptRoot
 
 $ErrorActionPreference = "Stop"
 
+. "$scriptDir\common.ps1"
+
 $sln = Join-Path $scriptDir "CodeCleanupTools.sln"
 
 Write-Host "Restoring nuget packages"

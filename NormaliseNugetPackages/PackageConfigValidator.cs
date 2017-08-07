@@ -47,7 +47,7 @@ namespace NormaliseNugetPackages
                 }
             }
 
-            var packagesThatNeedUpdating = new Dictionary<string, List<string>>();
+            var packagesThatNeedUpdating = new Dictionary<string, List<(string, Version)>>();
             var uptoDatePackages = new Dictionary<string, List<string>>();
             // Identify components using older packages
             foreach (var packageFile in packageFiles)
@@ -68,9 +68,9 @@ namespace NormaliseNugetPackages
                     Logger.Debug($"In {packageFile}:");
                     Logger.Debug($"\t{id} should be version {packageVersions[id]}");
                     if (!packagesThatNeedUpdating.ContainsKey(id))
-                        packagesThatNeedUpdating[id] = new List<string>();
+                        packagesThatNeedUpdating[id] = new List<(string, Version)>();
 
-                    packagesThatNeedUpdating[id].Add(Path.GetDirectoryName(packageFile));
+                    packagesThatNeedUpdating[id].Add((Path.GetDirectoryName(packageFile), version));
                 }
             }
 
@@ -90,7 +90,7 @@ namespace NormaliseNugetPackages
                 Logger.Error($"These components need {id} updated to {version}:");
                 foreach (var packageConfig in packageThatNeedsUpdating.Value)
                 {
-                    Logger.Error($"\t{packageConfig}");
+                    Logger.Error($"\t[from: {packageConfig.Item2}] {packageConfig.Item1}");
                 }
 
                 Logger.Error(" ");

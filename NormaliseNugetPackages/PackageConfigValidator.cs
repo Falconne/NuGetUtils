@@ -84,16 +84,16 @@ namespace NormaliseNugetPackages
             {
                 var id = packageThatNeedsUpdating.Key;
                 var version = packageVersions[id];
-                Logger.Info(" ");
-                Logger.Info(" ");
-                Logger.Info("=====================================================");
+                Logger.Error(" ");
+                Logger.Error(" ");
+                Logger.Error("=====================================================");
                 Logger.Error($"These components need {id} updated to {version}:");
                 foreach (var packageConfig in packageThatNeedsUpdating.Value)
                 {
                     Logger.Error($"\t{packageConfig}");
                 }
 
-                Logger.Info(" ");
+                Logger.Error(" ");
                 Logger.Error("These components are forcing this update:");
                 var uptoDatePackageList = uptoDatePackages[id];
                 foreach (var packageConfig in uptoDatePackageList)

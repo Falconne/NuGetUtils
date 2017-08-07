@@ -48,6 +48,7 @@ namespace NormaliseNugetPackages
             }
 
             var packagesThatNeedUpdating = new Dictionary<string, List<string>>();
+            var uptoDatePackages = new Dictionary<string, List<string>>();
             // Identify components using older packages
             foreach (var packageFile in packageFiles)
             {
@@ -55,7 +56,15 @@ namespace NormaliseNugetPackages
                 {
                     var id = versionedPackage.Key;
                     var version = versionedPackage.Value;
-                    if (version >= packageVersions[id]) continue;
+                    if (version >= packageVersions[id])
+                    {
+                        if (!uptoDatePackages.ContainsKey(id))
+                            uptoDatePackages[id] = new List<string>();
+
+                        uptoDatePackages[id].Add(Path.GetDirectoryName(packageFile));
+
+                        continue;
+                    }
                     Logger.Debug($"In {packageFile}:");
                     Logger.Debug($"\t{id} should be version {packageVersions[id]}");
                     if (!packagesThatNeedUpdating.ContainsKey(id))
@@ -75,8 +84,19 @@ namespace NormaliseNugetPackages
             {
                 var id = packageThatNeedsUpdating.Key;
                 var version = packageVersions[id];
-                Logger.Error($"These components need {id} updated to {version}");
+                Logger.Info(" ");
+                Logger.Info(" ");
+                Logger.Info("=====================================================");
+                Logger.Error($"These components need {id} updated to {version}:");
                 foreach (var packageConfig in packageThatNeedsUpdating.Value)
+                {
+                    Logger.Error($"\t{packageConfig}");
+                }
+
+                Logger.Info(" ");
+                Logger.Error("These components are forcing this update:");
+                var uptoDatePackageList = uptoDatePackages[id];
+                foreach (var packageConfig in uptoDatePackageList)
                 {
                     Logger.Error($"\t{packageConfig}");
                 }

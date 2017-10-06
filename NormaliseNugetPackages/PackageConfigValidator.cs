@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
 using log4net;
@@ -16,13 +17,20 @@ namespace NormaliseNugetPackages
                 throw new ValidationException($"{repoRoot} does not exist");
             }
 
-            var packageFiles = Directory.GetFiles(repoRoot, "packages.config", SearchOption.AllDirectories);
+            var packageFiles = Directory.GetFiles(repoRoot, "packages.config", SearchOption.AllDirectories)
+                .Where(ShouldProcessPackage)
+                .ToList();
 
             var packageVersions = new Dictionary<string, Version>();
 
             // Find the latest version used for all packages
             foreach (var packageFile in packageFiles)
             {
+                var directory = Path.GetDirectoryName(packageFile);
+                var skipMarker = Path.Combine(directory, "SkipNuGetValidation");
+                if (File.Exists(skipMarker))
+                    continue;
+
                 foreach (var versionedPackage in GetPackagesIn(packageFile))
                 {
                     var id = versionedPackage.Key;
@@ -100,6 +108,13 @@ namespace NormaliseNugetPackages
             }
 
             return null;
+        }
+
+        private static bool ShouldProcessPackage(string packageDefinitionFile)
+        {
+            var directory = Path.GetDirectoryName(packageDefinitionFile);
+            var skipMarker = Path.Combine(directory, "SkipNuGetValidation");
+            return !File.Exists(skipMarker);
         }
 
         private static IEnumerable<KeyValuePair<string, Version>> GetPackagesIn(string packageFile)

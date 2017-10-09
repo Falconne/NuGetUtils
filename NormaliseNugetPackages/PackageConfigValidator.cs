@@ -21,6 +21,11 @@ namespace NormaliseNugetPackages
                 .Where(ShouldProcessPackage)
                 .ToList();
 
+            var newFormatProjects = Directory.GetFiles(repoRoot, "*.csproj", SearchOption.AllDirectories)
+                .Where(ShouldProcessPackage);
+
+            packageFiles.AddRange(newFormatProjects);
+
             var packageVersions = new Dictionary<string, Version>();
 
             // Find the latest version used for all packages
@@ -114,29 +119,66 @@ namespace NormaliseNugetPackages
         {
             var directory = Path.GetDirectoryName(packageDefinitionFile);
             var skipMarker = Path.Combine(directory, "SkipNuGetValidation");
-            return !File.Exists(skipMarker);
+            if (File.Exists(skipMarker))
+                return false;
+
+            if (packageDefinitionFile.ToLower().EndsWith("packages.config"))
+                return true;
+
+            // Reject any csproj that's not in the new 2017 format
+            var csprojContent = File.ReadAllText(packageDefinitionFile);
+            const string newFormatMarker = "<Project Sdk=\"Microsoft.NET.Sdk\">";
+            return csprojContent.Contains(newFormatMarker);
         }
 
         private static IEnumerable<KeyValuePair<string, Version>> GetPackagesIn(string packageFile)
         {
             var xelement = XElement.Load(packageFile);
-            var packages = xelement.Descendants("package");
-            foreach (var packageElement in packages)
+            if (packageFile.ToLower().EndsWith(".csproj"))
             {
-                var id = packageElement.Attribute("id")?.Value;
-                var versionRaw = packageElement.Attribute("version")?.Value;
-                if (id == null || versionRaw == null)
+                var packageReferences = xelement.Descendants("PackageReference");
+                foreach (var packageReference in packageReferences)
                 {
-                    throw new ValidationException($"Invalid syntax in {packageFile}");
-                }
+                    var id = packageReference.Attribute("Include")?.Value;
+                    if (id == null)
+                    {
+                        id = packageReference.Attribute("Update")?.Value;
+                    }
+                    var versionRaw = packageReference.Attribute("Version")?.Value;
+                    if (id == null || versionRaw == null)
+                    {
+                        throw new ValidationException($"Invalid syntax in {packageFile}");
+                    }
 
-                if (!Version.TryParse(versionRaw, out Version version))
+                    if (!Version.TryParse(versionRaw, out Version version))
+                    {
+                        Logger.Warn($"Ignoring unparsable version for {id}: {versionRaw}");
+                        continue;
+                    }
+
+                    yield return new KeyValuePair<string, Version>(id, version);
+                }
+            }
+            else
+            {
+                var packages = xelement.Descendants("package");
+                foreach (var packageElement in packages)
                 {
-                    Logger.Warn($"Ignoring unparsable version for {id}: {versionRaw} in {packageFile}");
-                    continue;
-                }
+                    var id = packageElement.Attribute("id")?.Value;
+                    var versionRaw = packageElement.Attribute("version")?.Value;
+                    if (id == null || versionRaw == null)
+                    {
+                        throw new ValidationException($"Invalid syntax in {packageFile}");
+                    }
 
-                yield return new KeyValuePair<string, Version>(id, version);
+                    if (!Version.TryParse(versionRaw, out Version version))
+                    {
+                        Logger.Warn($"Ignoring unparsable version for {id}: {versionRaw}");
+                        continue;
+                    }
+
+                    yield return new KeyValuePair<string, Version>(id, version);
+                }
             }
         }
 

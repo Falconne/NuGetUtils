@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Xml;
 using System.Xml.Linq;
 using log4net;
 
@@ -133,7 +134,17 @@ namespace NormaliseNugetPackages
 
         private static IEnumerable<KeyValuePair<string, Version>> GetPackagesIn(string packageFile)
         {
-            var xelement = XElement.Load(packageFile);
+            XDocument xelement;
+            try
+            {
+                xelement = XDocument.Load(new StreamReader(packageFile, true));
+
+            }
+            catch (XmlException e)
+            {
+                var msg = $"XML Exception while loading {packageFile}: {e.Message}";
+                throw new ValidationException(msg);
+            }
             if (packageFile.ToLower().EndsWith(".csproj"))
             {
                 var packageReferences = xelement.Descendants("PackageReference");

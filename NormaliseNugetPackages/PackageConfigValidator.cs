@@ -95,6 +95,8 @@ namespace NormaliseNugetPackages
             {
                 var id = packageThatNeedsUpdating.Key;
                 var version = packageVersions[id];
+                string downgradeToVersion = null;
+                bool canDoGenericDowngrade = true; 
                 Logger.Error(" ");
                 Logger.Error(" ");
                 Logger.Error("=====================================================");
@@ -102,6 +104,18 @@ namespace NormaliseNugetPackages
                 foreach (var packageConfig in packageThatNeedsUpdating.Value)
                 {
                     Logger.Error($"\t[from: {packageConfig.Item2}] {packageConfig.Item1}");
+                    if (downgradeToVersion == null)
+                    {
+                        downgradeToVersion = packageConfig.Item2.ToString();
+                    }
+                    else if (canDoGenericDowngrade)
+                    {
+                        if (downgradeToVersion != packageConfig.Item2.ToString())
+                        {
+                            canDoGenericDowngrade = false;
+                        }
+                    }
+                    
                 }
 
                 Logger.Error(" ");
@@ -110,6 +124,18 @@ namespace NormaliseNugetPackages
                 foreach (var packageConfig in uptoDatePackageList)
                 {
                     Logger.Error($"\t{packageConfig}");
+                }
+
+                Logger.Error(" ");
+                Logger.Error(
+                    "Package Manager Console command to UPGRADE all projects in a solution:");
+                Logger.Error($"\tUpdate-Package {id} -Version {version}");
+                if (canDoGenericDowngrade)
+                {
+                    Logger.Error(" ");
+                    Logger.Error(
+                        "Package Manager Console command to DOWNGRADE all projects in a solution:");
+                    Logger.Error($"\tUpdate-Package {id} -Version {downgradeToVersion}");
                 }
             }
 

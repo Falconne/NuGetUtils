@@ -6,7 +6,7 @@ $ErrorActionPreference = "Stop"
 
 . "$scriptDir\common.ps1"
 
-$sln = Join-Path $scriptDir "CodeCleanupTools.sln"
+$sln = Join-Path $scriptDir "NuGetUtils.sln"
 
 Write-Host "Restoring nuget packages"
 $nuget = Join-Path $scriptDir "nuget.exe"

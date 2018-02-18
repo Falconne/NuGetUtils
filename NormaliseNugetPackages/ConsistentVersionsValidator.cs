@@ -18,11 +18,13 @@ namespace NormaliseNugetPackages
                 throw new ValidationException($"{repoRoot} does not exist");
             }
 
-            var packageFiles = Directory.GetFiles(repoRoot, "packages.config", SearchOption.AllDirectories)
+            var packageFiles = Directory.GetFiles(
+                    repoRoot, "packages.config", SearchOption.AllDirectories)
                 .Where(ShouldProcessPackage)
                 .ToList();
 
-            var newFormatProjects = Directory.GetFiles(repoRoot, "*.csproj", SearchOption.AllDirectories)
+            var newFormatProjects = Directory.GetFiles(
+                    repoRoot, "*.csproj", SearchOption.AllDirectories)
                 .Where(ShouldProcessPackage);
 
             packageFiles.AddRange(newFormatProjects);
@@ -58,7 +60,9 @@ namespace NormaliseNugetPackages
                 }
             }
 
-            var packagesThatNeedUpdating = new Dictionary<string, List<(string, Version)>>();
+            var packagesThatNeedUpdating =
+                new Dictionary<string, List<(string, Version)>>();
+
             var uptoDatePackages = new Dictionary<string, List<string>>();
             // Identify components using older packages
             foreach (var packageFile in packageFiles)
@@ -81,7 +85,8 @@ namespace NormaliseNugetPackages
                     if (!packagesThatNeedUpdating.ContainsKey(id))
                         packagesThatNeedUpdating[id] = new List<(string, Version)>();
 
-                    packagesThatNeedUpdating[id].Add((Path.GetDirectoryName(packageFile), version));
+                    packagesThatNeedUpdating[id].Add(
+                        (Path.GetDirectoryName(packageFile), version));
                 }
             }
 
@@ -158,7 +163,8 @@ namespace NormaliseNugetPackages
             return csprojContent.Contains(newFormatMarker);
         }
 
-        private static IEnumerable<KeyValuePair<string, Version>> GetPackagesIn(string packageFile)
+        private static IEnumerable<KeyValuePair<string, Version>> GetPackagesIn(
+            string packageFile)
         {
             XDocument xelement;
             try

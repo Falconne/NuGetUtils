@@ -9,7 +9,7 @@ using log4net;
 
 namespace NormaliseNugetPackages
 {
-    internal static class PackageConfigValidator
+    internal static class ConsistentVersionsValidator
     {
         public static Dictionary<string, Version> Validate(string repoRoot)
         {

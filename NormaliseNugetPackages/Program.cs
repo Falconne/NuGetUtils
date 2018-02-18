@@ -24,7 +24,7 @@ namespace NormaliseNugetPackages
 
             try
             {
-                var packageVersions = PackageConfigValidator.Validate(repoRoot);
+                var packageVersions = ConsistentVersionsValidator.Validate(repoRoot);
                 if (packageVersions == null)
                 {
                     ExitWithError("One or more conflicting package versions found");

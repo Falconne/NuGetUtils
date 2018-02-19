@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
 using System.Reflection;
-using System.Xml.Linq;
 using log4net;
 using log4net.Config;
 

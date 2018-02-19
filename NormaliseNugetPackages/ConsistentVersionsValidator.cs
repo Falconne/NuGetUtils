@@ -6,12 +6,13 @@ using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 using log4net;
+using NuGet.Versioning;
 
 namespace NormaliseNugetPackages
 {
     internal static class ConsistentVersionsValidator
     {
-        public static Dictionary<string, Version> Validate(string repoRoot)
+        public static Dictionary<string, NuGetVersion> Validate(string repoRoot)
         {
             if (!Directory.Exists(repoRoot))
             {
@@ -29,7 +30,7 @@ namespace NormaliseNugetPackages
 
             packageFiles.AddRange(newFormatProjects);
 
-            var packageVersions = new Dictionary<string, Version>();
+            var packageVersions = new Dictionary<string, NuGetVersion>();
 
             // Find the latest version used for all packages
             foreach (var packageFile in packageFiles)
@@ -61,7 +62,7 @@ namespace NormaliseNugetPackages
             }
 
             var packagesThatNeedUpdating =
-                new Dictionary<string, List<(string, Version)>>();
+                new Dictionary<string, List<(string, NuGetVersion)>>();
 
             var uptoDatePackages = new Dictionary<string, List<string>>();
             // Identify components using older packages
@@ -83,7 +84,7 @@ namespace NormaliseNugetPackages
                     Logger.Debug($"In {packageFile}:");
                     Logger.Debug($"\t{id} should be version {packageVersions[id]}");
                     if (!packagesThatNeedUpdating.ContainsKey(id))
-                        packagesThatNeedUpdating[id] = new List<(string, Version)>();
+                        packagesThatNeedUpdating[id] = new List<(string, NuGetVersion)>();
 
                     packagesThatNeedUpdating[id].Add(
                         (Path.GetDirectoryName(packageFile), version));
@@ -163,7 +164,7 @@ namespace NormaliseNugetPackages
             return csprojContent.Contains(newFormatMarker);
         }
 
-        private static IEnumerable<KeyValuePair<string, Version>> GetPackagesIn(
+        private static IEnumerable<KeyValuePair<string, NuGetVersion>> GetPackagesIn(
             string packageFile)
         {
             XDocument xelement;
@@ -177,6 +178,7 @@ namespace NormaliseNugetPackages
                 var msg = $"XML Exception while loading {packageFile}: {e.Message}";
                 throw new ValidationException(msg);
             }
+
             if (packageFile.ToLower().EndsWith(".csproj"))
             {
                 var packageReferences = xelement.Descendants("PackageReference");
@@ -193,13 +195,11 @@ namespace NormaliseNugetPackages
                         throw new ValidationException($"Invalid syntax in {packageFile}");
                     }
 
-                    if (!Version.TryParse(versionRaw, out Version version))
-                    {
-                        Logger.Warn($"Ignoring unparsable version for {id}: {versionRaw}");
+                    var result = GetParsedVersion(versionRaw, id);
+                    if (result == null)
                         continue;
-                    }
 
-                    yield return new KeyValuePair<string, Version>(id, version);
+                    yield return (KeyValuePair<string, NuGetVersion>) result;
                 }
             }
             else
@@ -214,15 +214,29 @@ namespace NormaliseNugetPackages
                         throw new ValidationException($"Invalid syntax in {packageFile}");
                     }
 
-                    if (!Version.TryParse(versionRaw, out Version version))
-                    {
-                        Logger.Warn($"Ignoring unparsable version for {id}: {versionRaw}");
+                    var result = GetParsedVersion(versionRaw, id);
+                    if (result == null)
                         continue;
-                    }
 
-                    yield return new KeyValuePair<string, Version>(id, version);
+                    yield return (KeyValuePair<string, NuGetVersion>) result;
                 }
             }
+        }
+
+        private static KeyValuePair<string, NuGetVersion>? GetParsedVersion(
+            string versionRaw, string packageId)
+        {
+            try
+            {
+                var version = NuGetVersion.Parse(versionRaw);
+                return new KeyValuePair<string, NuGetVersion>(packageId, version);
+            }
+            catch (Exception)
+            {
+                Logger.Warn($"Ignoring unparsable version for {packageId}: {versionRaw}");
+            }
+
+            return null;
         }
 
         private static readonly ILog Logger =

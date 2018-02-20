@@ -102,7 +102,7 @@ namespace NormaliseNugetPackages
                 var id = packageThatNeedsUpdating.Key;
                 var version = packageVersions[id];
                 string downgradeToVersion = null;
-                bool canDoGenericDowngrade = true; 
+                bool canDoGenericDowngrade = true;
                 Logger.Error(" ");
                 Logger.Error(" ");
                 Logger.Error("=====================================================");
@@ -121,7 +121,7 @@ namespace NormaliseNugetPackages
                             canDoGenericDowngrade = false;
                         }
                     }
-                    
+
                 }
 
                 Logger.Error(" ");
@@ -158,10 +158,9 @@ namespace NormaliseNugetPackages
             if (packageDefinitionFile.ToLower().EndsWith("packages.config"))
                 return true;
 
-            // Reject any csproj that's not in the new 2017 format
+            // Reject any csproj that doesn't use PackageReferences
             var csprojContent = File.ReadAllText(packageDefinitionFile);
-            const string newFormatMarker = "<Project Sdk=\"Microsoft.NET.Sdk\">";
-            return csprojContent.Contains(newFormatMarker);
+            return csprojContent.Contains("PackageReference");
         }
 
         private static IEnumerable<KeyValuePair<string, NuGetVersion>> GetPackagesIn(
@@ -199,7 +198,7 @@ namespace NormaliseNugetPackages
                     if (result == null)
                         continue;
 
-                    yield return (KeyValuePair<string, NuGetVersion>) result;
+                    yield return (KeyValuePair<string, NuGetVersion>)result;
                 }
             }
             else
@@ -218,7 +217,7 @@ namespace NormaliseNugetPackages
                     if (result == null)
                         continue;
 
-                    yield return (KeyValuePair<string, NuGetVersion>) result;
+                    yield return (KeyValuePair<string, NuGetVersion>)result;
                 }
             }
         }

@@ -2,26 +2,32 @@
 using System.Reflection;
 using log4net;
 using log4net.Config;
+using CommandLine;
+using log4net.Util;
 
 namespace NormaliseNugetPackages
 {
-    // Checks all package.config files under given path for conflicting package versions
+    internal class Options
+    {
+        [Option('p', "path", 
+            HelpText = "Root to search for projects under", Required = true)]
+        public string Path { get; set; }
+    }
+
     internal class Program
     {
         private static void Main(string[] args)
         {
             XmlConfigurator.Configure();
 
-            if (args.Length != 1)
-            {
-                ExitWithError($"Usage: {AppDomain.CurrentDomain.FriendlyName} <path>");
-            }
-
-            var repoRoot = args[0];
+            Options options = null;
+            Parser.Default.ParseArguments<Options>(args)
+                .WithNotParsed(errors => Environment.Exit(1))
+                .WithParsed(o => options = o);
 
             try
             {
-                var packageVersions = ConsistentVersionsValidator.Validate(repoRoot);
+                var packageVersions = ConsistentVersionsValidator.Validate(options.Path);
                 if (packageVersions == null)
                 {
                     ExitWithError("One or more conflicting package versions found");

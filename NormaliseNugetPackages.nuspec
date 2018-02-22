@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<package>
+  <metadata>
+    <id>NormaliseNugetPackages</id>
+    <version>$version$</version>
+    <authors>Anuradha Dissanayake</authors>
+    <owners>Anuradha Dissanayake</owners>
+    <projectUrl>https://github.com/Falconne/NuGetUtils</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Utility to check that all NuGet packages used under a given tree are consistent</description>
+  </metadata>
+  <files>
+    <file src="bin\*.exe" target="tools" />
+    <file src="bin\*.dll" target="tools" />
+    <file src="bin\*.config" target="tools" />
+  </files>
+</package>

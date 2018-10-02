@@ -191,7 +191,14 @@ namespace NormaliseNugetPackages
                     var versionRaw = packageReference.Attribute("Version")?.Value;
                     if (id == null || versionRaw == null)
                     {
-                        throw new ValidationException($"Invalid syntax in {packageFile}");
+                        if (id != null)
+                        {
+                            throw new ValidationException(
+                                $"A specific version has not been provided for {id} in {packageFile}");
+                        }
+
+                        throw new ValidationException(
+                            $"Invalid syntax in {packageFile}: PackageReference with no id");
                     }
 
                     var result = GetParsedVersion(versionRaw, id);

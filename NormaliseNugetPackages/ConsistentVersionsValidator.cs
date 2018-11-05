@@ -21,12 +21,12 @@ namespace NormaliseNugetPackages
 
             var packageFiles = Directory.GetFiles(
                     repoRoot, "packages.config", SearchOption.AllDirectories)
-                .Where(ShouldProcessPackage)
+                .Where(ShouldProcessProject)
                 .ToList();
 
             var newFormatProjects = Directory.GetFiles(
                     repoRoot, "*.csproj", SearchOption.AllDirectories)
-                .Where(ShouldProcessPackage);
+                .Where(ShouldProcessProject);
 
             packageFiles.AddRange(newFormatProjects);
 
@@ -148,7 +148,7 @@ namespace NormaliseNugetPackages
             return null;
         }
 
-        private static bool ShouldProcessPackage(string packageDefinitionFile)
+        private static bool ShouldProcessProject(string packageDefinitionFile)
         {
             var directory = Path.GetDirectoryName(packageDefinitionFile);
             var skipMarker = Path.Combine(directory, "SkipNuGetValidation");
@@ -193,6 +193,12 @@ namespace NormaliseNugetPackages
                     {
                         if (id != null)
                         {
+                            if (id.Equals("Microsoft.AspNetCore.App", StringComparison.OrdinalIgnoreCase))
+                            {
+                                // This one is special. See https://github.com/aspnet/Docs/issues/6430
+                                continue;
+                            }
+
                             throw new ValidationException(
                                 $"A specific version has not been provided for {id} in {packageFile}");
                         }

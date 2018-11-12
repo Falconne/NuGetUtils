@@ -1,12 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using CommandLine;
+using log4net;
+using log4net.Config;
+using Newtonsoft.Json;
+using System;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using log4net;
-using log4net.Config;
-using CommandLine;
-using Newtonsoft.Json;
 
 namespace NormaliseNugetPackages
 {
@@ -45,6 +44,7 @@ namespace NormaliseNugetPackages
                 var packageVersions = ConsistentVersionsValidator.Validate(options.Path);
                 if (packageVersions == null)
                 {
+                    Logger.Info("NOTE: Non production directories can be excluded from this check by creating a file called 'SkipNuGetValidation' at the root of a tree to exclude.");
                     ExitWithError("One or more conflicting package versions found");
                 }
 

@@ -1,12 +1,12 @@
-﻿using System;
+﻿using log4net;
+using NuGet.Versioning;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
-using log4net;
-using NuGet.Versioning;
 
 namespace NormaliseNugetPackages
 {
@@ -35,11 +35,6 @@ namespace NormaliseNugetPackages
             // Find the latest version used for all packages
             foreach (var packageFile in packageFiles)
             {
-                var directory = Path.GetDirectoryName(packageFile);
-                var skipMarker = Path.Combine(directory, "SkipNuGetValidation");
-                if (File.Exists(skipMarker))
-                    continue;
-
                 foreach (var versionedPackage in GetPackagesIn(packageFile))
                 {
                     var id = versionedPackage.Key;
@@ -148,11 +143,24 @@ namespace NormaliseNugetPackages
             return null;
         }
 
+        private static bool ShouldProcessDirectory(string directoryToCheck)
+        {
+            while (true)
+            {
+                var skipMarker = Path.Combine(directoryToCheck, "SkipNuGetValidation");
+                if (File.Exists(skipMarker))
+                    return false;
+
+                directoryToCheck = Directory.GetParent(directoryToCheck)?.FullName;
+                if (directoryToCheck == null)
+                    return true;
+            }
+        }
+
         private static bool ShouldProcessProject(string packageDefinitionFile)
         {
             var directory = Path.GetDirectoryName(packageDefinitionFile);
-            var skipMarker = Path.Combine(directory, "SkipNuGetValidation");
-            if (File.Exists(skipMarker))
+            if (!ShouldProcessDirectory(directory))
                 return false;
 
             if (packageDefinitionFile.ToLower().EndsWith("packages.config"))

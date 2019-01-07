@@ -14,11 +14,7 @@ namespace NormaliseNugetPackages
     {
         public static Dictionary<string, NuGetVersion> Validate(string repoRoot)
         {
-            if (!Directory.Exists(repoRoot))
-            {
-                throw new ValidationException($"{repoRoot} does not exist");
-            }
-
+            Logger.Info("Validating NuGet versions");
             var packageFiles = Directory.GetFiles(
                     repoRoot, "packages.config", SearchOption.AllDirectories)
                 .Where(ShouldProcessProject)

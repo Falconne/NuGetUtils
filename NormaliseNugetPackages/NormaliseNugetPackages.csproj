@@ -63,6 +63,7 @@
   <ItemGroup>
     <Compile Include="ConsistentVersionsValidator.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="ProjectIntegrityValidator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ValidationException.cs" />
   </ItemGroup>

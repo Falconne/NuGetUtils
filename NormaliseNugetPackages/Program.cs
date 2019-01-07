@@ -39,6 +39,11 @@ namespace NormaliseNugetPackages
 
         private static void Execute(Options options)
         {
+            if (!Directory.Exists(options.Path))
+            {
+                ExitWithError($"{options.Path} does not exist");
+            }
+
             try
             {
                 var packageVersions = ConsistentVersionsValidator.Validate(options.Path);
@@ -66,6 +71,11 @@ namespace NormaliseNugetPackages
             catch (ValidationException e)
             {
                 ExitWithError(e.Message);
+            }
+
+            if (!ProjectIntegrityValidator.Validate(options.Path))
+            {
+                ExitWithError("One or more .csproj files failed integrity check.");
             }
         }
 

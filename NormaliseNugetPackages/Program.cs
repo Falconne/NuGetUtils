@@ -1,10 +1,8 @@
 ﻿using CommandLine;
 using log4net;
 using log4net.Config;
-using Newtonsoft.Json;
 using System;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 
 namespace NormaliseNugetPackages
@@ -20,7 +18,7 @@ namespace NormaliseNugetPackages
         public string Report { get; set; }
     }
 
-    internal struct PackageVersionDefinition
+    public struct PackageVersionDefinition
     {
         public string Name;
         public string Version;
@@ -53,20 +51,10 @@ namespace NormaliseNugetPackages
                     ExitWithError("One or more conflicting package versions found");
                 }
 
-                if (string.IsNullOrWhiteSpace(options.Report))
-                    return;
-
-                var printableVersions = packageVersions.Keys
-                    .OrderBy(name => name)
-                    .Select(k =>
-                        new PackageVersionDefinition
-                            { Name = k, Version = packageVersions[k].ToString()}
-                        );
-
-                var json = JsonConvert.SerializeObject(printableVersions, Formatting.Indented);
-
-                Logger.Info($"Writing report to {options.Report}");
-                File.WriteAllText(options.Report, json);
+                if (!string.IsNullOrWhiteSpace(options.Report))
+                {
+                    WriteVersionReport(options, packageVersions);
+                }
             }
             catch (ValidationException e)
             {
@@ -77,6 +65,14 @@ namespace NormaliseNugetPackages
             {
                 ExitWithError("One or more .csproj files failed integrity check.");
             }
+        }
+
+        private static void WriteVersionReport(Options options, PackageCollection packageVersions)
+        {
+            var json = packageVersions.GetPrintableReport();
+
+            Logger.Info($"Writing report to {options.Report}");
+            File.WriteAllText(options.Report, json);
         }
 
         private static void ExitWithError(string message)

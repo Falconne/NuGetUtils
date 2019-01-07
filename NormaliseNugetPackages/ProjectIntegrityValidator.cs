@@ -1,8 +1,6 @@
 ﻿using log4net;
 using System.IO;
 using System.Reflection;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace NormaliseNugetPackages
 {
@@ -25,24 +23,15 @@ namespace NormaliseNugetPackages
 
         private static bool ValidateProject(string project)
         {
-            XDocument xelement;
-            try
-            {
-                xelement = XDocument.Load(new StreamReader(project, true));
-
-            }
-            catch (XmlException e)
-            {
-                var msg = $"XML Exception while loading {project}: {e.Message}";
-                throw new ValidationException(msg);
-            }
-
             var anyFailure = false;
-            foreach (var element in xelement.Descendants("HintPath"))
+            foreach (var line in File.ReadAllLines(project))
             {
-                if (element.Value.Contains(":") || element.Value.StartsWith("/"))
+                if (!line.ToLower().Contains("<hintpath>"))
+                    continue;
+
+                if (line.Contains(":") || line.StartsWith("/"))
                 {
-                    Logger.Error($"Absolute path found in HintPath inside {project}: {element.Value}");
+                    Logger.Error($"Absolute path found in HintPath inside {project}: {line}");
                     anyFailure = true;
                 }
             }

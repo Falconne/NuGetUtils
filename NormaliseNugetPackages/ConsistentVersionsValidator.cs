@@ -12,7 +12,7 @@ namespace NormaliseNugetPackages
 {
     internal static class ConsistentVersionsValidator
     {
-        public static Dictionary<string, NuGetVersion> Validate(string repoRoot)
+        public static PackageCollection Validate(string repoRoot)
         {
             Logger.Info("Validating NuGet versions");
             var packageFiles = Directory.GetFiles(
@@ -26,29 +26,14 @@ namespace NormaliseNugetPackages
 
             packageFiles.AddRange(newFormatProjects);
 
-            var packageVersions = new Dictionary<string, NuGetVersion>();
+            var packageVersions = new PackageCollection();
 
             // Find the latest version used for all packages
             foreach (var packageFile in packageFiles)
             {
                 foreach (var versionedPackage in GetPackagesIn(packageFile))
                 {
-                    var id = versionedPackage.Key;
-                    var version = versionedPackage.Value;
-                    if (packageVersions.ContainsKey(id))
-                    {
-                        if (version <= packageVersions[id])
-                        {
-                            continue;
-                        }
-                        Logger.Debug($"UPDATE {id} to {version} ");
-                    }
-                    else
-                    {
-                        Logger.Debug($"Add {id} ({version}) ");
-                    }
-
-                    packageVersions[id] = version;
+                    packageVersions.AddOrUpdatePackage(versionedPackage.Key, versionedPackage.Value);
                 }
             }
 
@@ -63,7 +48,7 @@ namespace NormaliseNugetPackages
                 {
                     var id = versionedPackage.Key;
                     var version = versionedPackage.Value;
-                    if (version >= packageVersions[id])
+                    if (version >= packageVersions.GetVersionOf(id))
                     {
                         if (!uptoDatePackages.ContainsKey(id))
                             uptoDatePackages[id] = new List<string>();
@@ -73,7 +58,7 @@ namespace NormaliseNugetPackages
                         continue;
                     }
                     Logger.Debug($"In {packageFile}:");
-                    Logger.Debug($"\t{id} should be version {packageVersions[id]}");
+                    Logger.Debug($"\t{id} should be version {packageVersions.GetVersionOf(id)}");
                     if (!packagesThatNeedUpdating.ContainsKey(id))
                         packagesThatNeedUpdating[id] = new List<(string, NuGetVersion)>();
 
@@ -91,7 +76,7 @@ namespace NormaliseNugetPackages
             foreach (var packageThatNeedsUpdating in packagesThatNeedUpdating)
             {
                 var id = packageThatNeedsUpdating.Key;
-                var version = packageVersions[id];
+                var version = packageVersions.GetVersionOf(id);
                 string downgradeToVersion = null;
                 bool canDoGenericDowngrade = true;
                 Logger.Error(" ");

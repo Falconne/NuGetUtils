@@ -1,5 +1,6 @@
 ﻿using log4net;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 
 namespace NormaliseNugetPackages
@@ -9,7 +10,10 @@ namespace NormaliseNugetPackages
         public static bool Validate(string repoRoot)
         {
             Logger.Info("Validating all csproj integrity");
-            var projects = Directory.GetFiles(repoRoot, "*.csproj", SearchOption.AllDirectories);
+            var projects = Directory
+                .GetFiles(repoRoot, "*.csproj", SearchOption.AllDirectories)
+                .Where(Program.ShouldProcessDirectory);
+
             var anyFailure = false;
 
             foreach (var project in projects)

@@ -26,6 +26,21 @@ namespace NormaliseNugetPackages
 
     internal class Program
     {
+        public static bool ShouldProcessDirectory(string directoryToCheck)
+        {
+            while (true)
+            {
+                var skipMarker = Path.Combine(directoryToCheck, "SkipNuGetValidation");
+                if (File.Exists(skipMarker))
+                    return false;
+
+                directoryToCheck = Directory.GetParent(directoryToCheck)?.FullName;
+                if (directoryToCheck == null)
+                    return true;
+            }
+        }
+
+
         private static void Main(string[] args)
         {
             XmlConfigurator.Configure();

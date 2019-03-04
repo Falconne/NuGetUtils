@@ -124,24 +124,10 @@ namespace NormaliseNugetPackages
             return null;
         }
 
-        private static bool ShouldProcessDirectory(string directoryToCheck)
-        {
-            while (true)
-            {
-                var skipMarker = Path.Combine(directoryToCheck, "SkipNuGetValidation");
-                if (File.Exists(skipMarker))
-                    return false;
-
-                directoryToCheck = Directory.GetParent(directoryToCheck)?.FullName;
-                if (directoryToCheck == null)
-                    return true;
-            }
-        }
-
         private static bool ShouldProcessProject(string packageDefinitionFile)
         {
             var directory = Path.GetDirectoryName(packageDefinitionFile);
-            if (!ShouldProcessDirectory(directory))
+            if (!Program.ShouldProcessDirectory(directory))
                 return false;
 
             if (packageDefinitionFile.ToLower().EndsWith("packages.config"))

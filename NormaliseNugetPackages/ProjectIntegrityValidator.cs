@@ -22,7 +22,7 @@ namespace NormaliseNugetPackages
                     anyFailure = true;
             }
 
-            return anyFailure;
+            return !anyFailure;
         }
 
         private static bool ValidateProject(string project)
@@ -40,7 +40,7 @@ namespace NormaliseNugetPackages
                 }
             }
 
-            return anyFailure;
+            return !anyFailure;
         }
 
 

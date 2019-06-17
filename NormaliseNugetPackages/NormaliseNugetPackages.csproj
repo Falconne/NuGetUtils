@@ -63,6 +63,9 @@
   <ItemGroup>
     <Compile Include="ConsistentVersionsValidator.cs" />
     <Compile Include="PackageCollection.cs" />
+    <Compile Include="ProjectUsingPackageVersion.cs" />
+    <Compile Include="ProjectsNeedingUpgrade.cs" />
+    <Compile Include="PackageUsageMatrix.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="ProjectIntegrityValidator.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

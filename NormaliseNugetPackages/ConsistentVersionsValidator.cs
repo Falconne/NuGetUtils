@@ -1,12 +1,5 @@
 ﻿using log4net;
-using NuGet.Versioning;
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Xml;
-using System.Xml.Linq;
 
 namespace NormaliseNugetPackages
 {
@@ -14,217 +7,40 @@ namespace NormaliseNugetPackages
     {
         public static PackageCollection Validate(string repoRoot)
         {
-            Logger.Info("Validating NuGet versions");
-            var packageFiles = Directory.GetFiles(
-                    repoRoot, "packages.config", SearchOption.AllDirectories)
-                .Where(ShouldProcessProject)
-                .ToList();
+            var usageMatrix = new PackageUsageMatrix();
+            usageMatrix.Build(repoRoot);
 
-            var newFormatProjects = Directory.GetFiles(
-                    repoRoot, "*.csproj", SearchOption.AllDirectories)
-                .Where(ShouldProcessProject);
-
-            packageFiles.AddRange(newFormatProjects);
-
-            var packageVersions = new PackageCollection();
-
-            // Find the latest version used for all packages
-            foreach (var packageFile in packageFiles)
-            {
-                foreach (var versionedPackage in GetPackagesIn(packageFile))
-                {
-                    packageVersions.AddOrUpdatePackage(versionedPackage.Key, versionedPackage.Value);
-                }
-            }
-
-            var packagesThatNeedUpdating =
-                new Dictionary<string, List<(string, NuGetVersion)>>();
-
-            var uptoDatePackages = new Dictionary<string, List<string>>();
-            // Identify components using older packages
-            foreach (var packageFile in packageFiles)
-            {
-                foreach (var versionedPackage in GetPackagesIn(packageFile))
-                {
-                    var id = versionedPackage.Key;
-                    var version = versionedPackage.Value;
-                    if (version >= packageVersions.GetVersionOf(id))
-                    {
-                        if (!uptoDatePackages.ContainsKey(id))
-                            uptoDatePackages[id] = new List<string>();
-
-                        uptoDatePackages[id].Add(Path.GetDirectoryName(packageFile));
-
-                        continue;
-                    }
-                    Logger.Debug($"In {packageFile}:");
-                    Logger.Debug($"\t{id} should be version {packageVersions.GetVersionOf(id)}");
-                    if (!packagesThatNeedUpdating.ContainsKey(id))
-                        packagesThatNeedUpdating[id] = new List<(string, NuGetVersion)>();
-
-                    packagesThatNeedUpdating[id].Add(
-                        (Path.GetDirectoryName(packageFile), version));
-                }
-            }
-
-            if (packagesThatNeedUpdating.Count == 0)
+            if (usageMatrix.PackagesThatNeedUpdating.Count == 0)
             {
                 Logger.Info("All packages are upto date");
-                return packageVersions;
+                return usageMatrix.PackageVersions;
             }
 
-            foreach (var packageThatNeedsUpdating in packagesThatNeedUpdating)
+            foreach (var packageThatNeedsUpdating in usageMatrix.PackagesThatNeedUpdating)
             {
                 var id = packageThatNeedsUpdating.Key;
-                var version = packageVersions.GetVersionOf(id);
-                string downgradeToVersion = null;
-                bool canDoGenericDowngrade = true;
+                var projectsNeedingUpgrade = packageThatNeedsUpdating.Value;
+                var version = projectsNeedingUpgrade.ToVersion;
                 Logger.Error(" ");
                 Logger.Error(" ");
                 Logger.Error("=====================================================");
                 Logger.Error($"These components need {id} updated to {version}:");
-                foreach (var packageConfig in packageThatNeedsUpdating.Value)
+                foreach (var projectAtLowerVersion in projectsNeedingUpgrade.ProjectsAtLowerVersion)
                 {
-                    Logger.Error($"\t[from: {packageConfig.Item2}] {packageConfig.Item1}");
-                    if (downgradeToVersion == null)
-                    {
-                        downgradeToVersion = packageConfig.Item2.ToString();
-                    }
-                    else if (canDoGenericDowngrade)
-                    {
-                        if (downgradeToVersion != packageConfig.Item2.ToString())
-                        {
-                            canDoGenericDowngrade = false;
-                        }
-                    }
-
+                    Logger.Error($"\t[from: {projectAtLowerVersion.Version}] {projectAtLowerVersion.Project}");
                 }
 
                 Logger.Error(" ");
                 Logger.Error("These components are forcing this update:");
-                var uptoDatePackageList = uptoDatePackages[id];
-                foreach (var packageConfig in uptoDatePackageList)
+                foreach (var componentDir in usageMatrix.PackagesWithConsistentVersions[id])
                 {
-                    Logger.Error($"\t{packageConfig}");
-                }
-
-                Logger.Error(" ");
-                Logger.Error(
-                    "Package Manager Console command to UPGRADE all projects in a solution:");
-                Logger.Error($"\tUpdate-Package {id} -Version {version}");
-                if (canDoGenericDowngrade)
-                {
-                    Logger.Error(" ");
-                    Logger.Error(
-                        "Package Manager Console command to DOWNGRADE all projects in a solution:");
-                    Logger.Error($"\tUpdate-Package {id} -Version {downgradeToVersion}");
+                    Logger.Error($"\t{componentDir}");
                 }
             }
 
             return null;
         }
 
-        private static bool ShouldProcessProject(string packageDefinitionFile)
-        {
-            var directory = Path.GetDirectoryName(packageDefinitionFile);
-            if (!Program.ShouldProcessDirectory(directory))
-                return false;
-
-            if (packageDefinitionFile.ToLower().EndsWith("packages.config"))
-                return true;
-
-            // Reject any csproj that doesn't use PackageReferences
-            var csprojContent = File.ReadAllText(packageDefinitionFile);
-            return csprojContent.Contains("PackageReference");
-        }
-
-        private static IEnumerable<KeyValuePair<string, NuGetVersion>> GetPackagesIn(
-            string packageFile)
-        {
-            XDocument xelement;
-            try
-            {
-                xelement = XDocument.Load(new StreamReader(packageFile, true));
-
-            }
-            catch (XmlException e)
-            {
-                var msg = $"XML Exception while loading {packageFile}: {e.Message}";
-                throw new ValidationException(msg);
-            }
-
-            if (packageFile.ToLower().EndsWith(".csproj"))
-            {
-                var packageReferences = xelement.Descendants("PackageReference");
-                foreach (var packageReference in packageReferences)
-                {
-                    var id = packageReference.Attribute("Include")?.Value;
-                    if (id == null)
-                    {
-                        id = packageReference.Attribute("Update")?.Value;
-                    }
-                    var versionRaw = packageReference.Attribute("Version")?.Value;
-                    if (id == null || versionRaw == null)
-                    {
-                        if (id != null)
-                        {
-                            if (id.Equals("Microsoft.AspNetCore.App", StringComparison.OrdinalIgnoreCase))
-                            {
-                                // This one is special. See https://github.com/aspnet/Docs/issues/6430
-                                continue;
-                            }
-
-                            throw new ValidationException(
-                                $"A specific version has not been provided for {id} in {packageFile}");
-                        }
-
-                        throw new ValidationException(
-                            $"Invalid syntax in {packageFile}: PackageReference with no id");
-                    }
-
-                    var result = GetParsedVersion(versionRaw, id);
-                    if (result == null)
-                        continue;
-
-                    yield return (KeyValuePair<string, NuGetVersion>)result;
-                }
-            }
-            else
-            {
-                var packages = xelement.Descendants("package");
-                foreach (var packageElement in packages)
-                {
-                    var id = packageElement.Attribute("id")?.Value;
-                    var versionRaw = packageElement.Attribute("version")?.Value;
-                    if (id == null || versionRaw == null)
-                    {
-                        throw new ValidationException($"Invalid syntax in {packageFile}");
-                    }
-
-                    var result = GetParsedVersion(versionRaw, id);
-                    if (result == null)
-                        continue;
-
-                    yield return (KeyValuePair<string, NuGetVersion>)result;
-                }
-            }
-        }
-
-        private static KeyValuePair<string, NuGetVersion>? GetParsedVersion(
-            string versionRaw, string packageId)
-        {
-            try
-            {
-                var version = NuGetVersion.Parse(versionRaw);
-                return new KeyValuePair<string, NuGetVersion>(packageId, version);
-            }
-            catch (Exception)
-            {
-                Logger.Warn($"Ignoring unparsable version for {packageId}: {versionRaw}");
-            }
-
-            return null;
-        }
 
         private static readonly ILog Logger =
             LogManager.GetLogger(MethodBase.GetCurrentMethod().DeclaringType);

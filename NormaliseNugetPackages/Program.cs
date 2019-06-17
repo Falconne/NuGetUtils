@@ -16,6 +16,10 @@ namespace NormaliseNugetPackages
         [Option('r', "report",
             HelpText = "Path to a file to write a report of all used NuGet packages and their versions to (optional).", Required = false)]
         public string Report { get; set; }
+
+        [Option('f', "fix",
+            HelpText = "Fix inconsistencies by upgrading highest package version used", Required = false)]
+        public bool Fix { get; set; }
     }
 
     public struct PackageVersionDefinition
@@ -59,6 +63,12 @@ namespace NormaliseNugetPackages
 
             try
             {
+                if (options.Fix)
+                {
+                    ConsistencyFixer.FixVersionsUnder(options.Path);
+                    return;
+                }
+
                 var packageVersions = ConsistentVersionsValidator.Validate(options.Path);
                 if (packageVersions == null)
                 {

@@ -46,6 +46,9 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="Microsoft.Web.XmlTransform, Version=2.1.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <HintPath>..\packages\Microsoft.Web.Xdt.2.1.1\lib\net40\Microsoft.Web.XmlTransform.dll</HintPath>
+    </Reference>
     <Reference Include="Newtonsoft.Json, Version=11.0.0.0, Culture=neutral, PublicKeyToken=30ad4fe6b2a6aeed, processorArchitecture=MSIL">
       <HintPath>..\packages\Newtonsoft.Json.11.0.1\lib\net45\Newtonsoft.Json.dll</HintPath>
     </Reference>
@@ -61,6 +64,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ConsistencyFixer.cs" />
     <Compile Include="ConsistentVersionsValidator.cs" />
     <Compile Include="PackageCollection.cs" />
     <Compile Include="ProjectUsingPackageVersion.cs" />
@@ -76,6 +80,12 @@
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>cd $(SolutionDir)\packages
+for /f %25%25i in ('dir /s/b nuget.exe') do set nuget=%25%25i
+copy /y %25nuget%25 $(TargetDir)
+</PostBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

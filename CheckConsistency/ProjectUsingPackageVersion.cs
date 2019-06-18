@@ -1,6 +1,6 @@
 ﻿using NuGet.Versioning;
 
-namespace NormaliseNugetPackages
+namespace CheckConsistency
 {
     public class ProjectUsingPackageVersion
     {

@@ -1,7 +1,7 @@
 ﻿using NuGet.Versioning;
 using System.Collections.Generic;
 
-namespace NormaliseNugetPackages
+namespace CheckConsistency
 {
     public class ProjectsNeedingUpgrade
     {

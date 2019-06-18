@@ -8,7 +8,7 @@ using System.Reflection;
 using System.Xml;
 using System.Xml.Linq;
 
-namespace NormaliseNugetPackages
+namespace CheckConsistency
 {
     public class PackageUsageMatrix
     {

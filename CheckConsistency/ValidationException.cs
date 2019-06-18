@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace NormaliseNugetPackages
+namespace CheckConsistency
 {
     public class ValidationException : Exception
     {

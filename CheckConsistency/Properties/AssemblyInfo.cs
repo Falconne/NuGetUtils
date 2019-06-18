@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("NormaliseNugetPackages")]
+[assembly: AssemblyTitle("CheckConsistency")]
 [assembly: AssemblyDescription("Checks all package.config and .csproj files under given path for conflicting NuGet package versions")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Enghouse Ltd.")]
-[assembly: AssemblyProduct("NormaliseNugetPackages")]
+[assembly: AssemblyProduct("CheckConsistency")]
 [assembly: AssemblyCopyright("Copyright © 1998-2018 Enghouse Systems, Limited. All rights reserved.")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

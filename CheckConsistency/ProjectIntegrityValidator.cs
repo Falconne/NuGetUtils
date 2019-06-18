@@ -3,7 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 
-namespace NormaliseNugetPackages
+namespace CheckConsistency
 {
     public class ProjectIntegrityValidator
     {

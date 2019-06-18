@@ -3,7 +3,7 @@ using NuGet.Versioning;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace NormaliseNugetPackages
+namespace CheckConsistency
 {
     public class PackageCollection
     {

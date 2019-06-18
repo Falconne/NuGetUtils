@@ -1,7 +1,7 @@
 ﻿using log4net;
 using System.Reflection;
 
-namespace NormaliseNugetPackages
+namespace CheckConsistency
 {
     internal static class ConsistentVersionsValidator
     {

@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 
-namespace NormaliseNugetPackages
+namespace CheckConsistency
 {
     public class ConsistencyFixer
     {

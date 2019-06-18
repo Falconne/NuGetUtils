@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NormaliseNugetPackages", "NormaliseNugetPackages\NormaliseNugetPackages.csproj", "{64D9636C-B557-486E-AC38-DB95CAB1A6BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckConsistency", "NormaliseNugetPackages\CheckConsistency.csproj", "{64D9636C-B557-486E-AC38-DB95CAB1A6BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -18,5 +18,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {031AC51C-0BC7-4F52-8C11-4358D98C9C1B}
 	EndGlobalSection
 EndGlobal

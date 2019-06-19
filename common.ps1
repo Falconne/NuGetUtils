@@ -44,22 +44,22 @@ function checkForErrors
 {
     param
     (
-     [Parameter(Mandatory=$true, HelpMessage="Build Output")] $output
+        [Parameter(Mandatory = $true, HelpMessage = "Build Output")] $output
     )
 
     $errorPatterns = @(
-            ": error",
-            "Could not find file",
-            " fatal error",
-            "Cannot delete directory",
-            "Error E",
-            "could not be found with source path",
-            "The process cannot access the file",
-            "Error: ",
-            "SOLUTION FAILED:",
-            "Cannot delete directory",
-            "Error \d+"
-            )
+        ": error",
+        "Could not find file",
+        " fatal error",
+        "Cannot delete directory",
+        "Error E",
+        "could not be found with source path",
+        "The process cannot access the file",
+        "Error: ",
+        "SOLUTION FAILED:",
+        "Cannot delete directory",
+        "Error \d+"
+    )
 
     $foundErrors = $output | Select-String -pattern $errorPatterns |
     Out-String | % { $_.Split("`r`n") } | % { $_.Trim() } | Where { $_ }
@@ -76,10 +76,65 @@ function checkForErrors
     }
 }
 
+function Save-FileFromNetwork
+{
+    param
+    (
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string] $url,
+
+        [Parameter(Mandatory = $true)]
+        [ValidateNotNullOrEmpty()]
+        [string] $destination
+    )
+
+    [Net.ServicePointManager]::SecurityProtocol = "tls12, tls11, tls"
+    $webclient = New-Object System.Net.WebClient
+    # On some networks automatic proxy resolution causes several
+    # seconds delay
+    $webClient.Proxy = $null
+    Write-Host "Downloading $url => $destination"
+    $webClient.DownloadFile($url, $destination)
+    Write-Host "Done"
+}
+
+
+# Fetch latest nuget.exe from the internet
+function Get-NuGet
+{
+    $nuget = "$PSScriptRoot\nuget.exe"
+    $retriesAllowed = 2
+    while (!(Test-Path $nuget))
+    {
+        try
+        {
+            $url = "https://dist.nuget.org/win-x86-commandline/latest/nuget.exe"
+            Write-Host "Fetching latest NuGet from $url into $nuget"
+            Save-FileFromNetwork $url $nuget
+            Write-Host "Done"
+        }
+        catch
+        {
+            if ($retriesAllowed -le 0)
+            {
+                throw
+            }
+
+            $retriesAllowed--
+            Write-Host "Download failed. Will retry..."
+            Start-Sleep -Seconds 10
+        }
+    }
+
+    return $nuget
+}
+
+
 function build($sln)
 {
     Write-Host "Restoring NuGet packages"
-    & dotnet restore $sln
+    & (Get-NuGet) restore $sln
 
     Write-Host "Building $sln"
     $vswhere = Join-Path $scriptDir "vswhere.exe"

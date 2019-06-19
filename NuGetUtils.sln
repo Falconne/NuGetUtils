@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26403.3
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckConsistency", "NormaliseNugetPackages\CheckConsistency.csproj", "{64D9636C-B557-486E-AC38-DB95CAB1A6BA}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CheckConsistency", "CheckConsistency\CheckConsistency.csproj", "{64D9636C-B557-486E-AC38-DB95CAB1A6BA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -85,6 +85,9 @@ function checkForErrors
 
 function build($sln)
 {
+    Write-Host "Restoring NuGet packages"
+    & dotnet restore $sln
+
     Write-Host "Building $sln"
     $vswhere = Join-Path $scriptDir "vswhere.exe"
     $installationPath = & $vswhere -version 15 -requires Microsoft.Component.MSBuild -property installationPath

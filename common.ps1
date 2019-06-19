@@ -1,13 +1,6 @@
 Set-StrictMode -Version Latest
 $scriptDir = $PSScriptRoot
 
-if (!(Test-Path Env:\BUILD_VERSION))
-{
-    Write-Host "WARNING: BUILD_VERSION not set, assuming 1.0.0.1"
-    $Env:BUILD_VERSION = "1.0.0.1"
-}
-$buildVersion = $Env:BUILD_VERSION
-
 function _TeamCityFormatMessage
 {
     param

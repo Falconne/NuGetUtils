@@ -14,6 +14,12 @@ namespace CheckConsistency
 
             var usageMatrix = new PackageUsageMatrix();
             usageMatrix.Build(path);
+            if (usageMatrix.PackagesThatNeedUpdating.Count == 0)
+            {
+                Logger.Info("All package versions are consistent");
+                return;
+            }
+
             foreach (var packageUpgradeContext in usageMatrix.PackagesThatNeedUpdating)
             {
                 var packageId = packageUpgradeContext.Key;

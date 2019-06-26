@@ -30,12 +30,13 @@ namespace CheckConsistency
             var anyFailure = false;
             foreach (var line in File.ReadAllLines(project))
             {
-                if (!line.ToLower().Contains("<hintpath>"))
+                var lineLower = line.ToLower();
+                if (!lineLower.Contains("<hintpath>") && !lineLower.Contains("<projectreference"))
                     continue;
 
-                if (line.Contains(":") || line.StartsWith("/"))
+                if (line.Contains(":") || line.Contains("\"/"))
                 {
-                    Logger.Error($"Absolute path found in HintPath inside {project}: {line}");
+                    Logger.Error($"Absolute path found inside {project}: {line}");
                     anyFailure = true;
                 }
             }

@@ -113,7 +113,7 @@ namespace CheckConsistency
             XDocument xelement;
             try
             {
-                using (var s = File.OpenRead(packageFile))
+                using (var s = new StreamReader(packageFile, true))
                 {
                     xelement = XDocument.Load(s);
                 }

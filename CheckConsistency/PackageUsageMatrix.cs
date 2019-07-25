@@ -92,7 +92,6 @@ namespace CheckConsistency
                     PackagesThatNeedUpdating[id].ProjectsAtLowerVersion.Add(projectToAdd);
                 }
             }
-
         }
 
         private static bool ShouldProcessProject(string packageDefinitionFile)
@@ -105,8 +104,7 @@ namespace CheckConsistency
                 return true;
 
             // Reject any csproj that doesn't use PackageReferences
-            var csprojContent = File.ReadAllText(packageDefinitionFile);
-            return csprojContent.Contains("PackageReference");
+            return Program.IsSDKStyleProject(packageDefinitionFile);
         }
 
         private static IEnumerable<KeyValuePair<string, NuGetVersion>>
@@ -115,8 +113,10 @@ namespace CheckConsistency
             XDocument xelement;
             try
             {
-                xelement = XDocument.Load(
-                    new StreamReader(packageFile, true));
+                using (var s = File.OpenRead(packageFile))
+                {
+                    xelement = XDocument.Load(s);
+                }
             }
             catch (XmlException e)
             {

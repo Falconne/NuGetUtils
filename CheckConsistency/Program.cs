@@ -44,6 +44,11 @@ namespace CheckConsistency
             }
         }
 
+        public static bool IsSDKStyleProject(string path)
+        {
+            var csprojContent = File.ReadAllText(path);
+            return csprojContent.Contains("<Project Sdk=");
+        }
 
         private static void Main(string[] args)
         {

@@ -3,6 +3,7 @@
 *.sln           text eol=crlf
 *.bds*          text eol=crlf
 *.bpf           text eol=crlf
+*.DotSettings       text eol=lf
 
 *.exe           binary
 *.dll           binary

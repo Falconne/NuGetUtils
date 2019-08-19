@@ -138,13 +138,22 @@ function build($sln)
 
     Write-Host "Building $sln"
     $vswhere = Join-Path $scriptDir "vswhere.exe"
-    $installationPath = & $vswhere -version 15 -requires Microsoft.Component.MSBuild -property installationPath
+    $installationPath = & $vswhere -latest -version 15 -requires Microsoft.Component.MSBuild -property installationPath
     if (!$installationPath)
     {
         Write-Error "VS 2017 with MSBuild not found"
         exit 1
     }
-    $msbuild = Join-Path $installationPath "MSBuild\15.0\Bin\MSBuild.exe"
+
+    $msbuild = "$installationPath\MSBuild\Current\Bin\MSBuild.exe"
+    if (!(Test-Path $msbuild))
+    {
+        Write-Host "MSBuild not found at $msbuild."
+        $msbuild = "$installationPath\MSBuild\15.0\Bin\MSBuild.exe"
+        Write-Host "Will try $msbuild instead"
+    }
+
+
     Write-Host "Running $msbuild"
     & $msbuild /m $sln /p:Configuration=Release /nologo | Tee -Variable output
     if ($LASTEXITCODE -ne 0)
